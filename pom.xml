@@ -22,6 +22,5 @@
   </dependencies>
   <build>
     <finalName>sysfoo</finalName>
- </build>
-
+  </build>
 </project>
