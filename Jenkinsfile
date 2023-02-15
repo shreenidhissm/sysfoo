@@ -1,28 +1,34 @@
-pipeline{
-    agent { label 'slave-2' }
-    tools{
-        maven 'Maven 3.8.6'
+pipeline {
+    agent any 
+    environment {
+    DOCKER_CREDENTIALS = credentials('Dockercred')
     }
-    stages{
-        stage('Compile'){
+    stages { 
+        stage('SCM Checkout') {
             steps{
-                sh 'mvn compile'
+            git 'https://github.com/shreenidhissm/nodejs-demo.git'
             }
         }
-        stage('test'){
-            steps{
-                sh 'mvn clean test'
+
+        stage('Build docker image') {
+            steps {  
+                sh 'docker build -t shreenidhism/nodeapp:$BUILD_NUMBER .'
             }
         }
-        stage('package'){
+        stage('login to dockerhub') {
             steps{
-                sh 'mvn package -DskipTests'
+                sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
             }
-            post{
-                 always {
-                      echo "This block always runs."
-                 }
-                }
+        }
+        stage('push image') {
+            steps{
+                sh 'docker push shreenidhism/nodeapp:$BUILD_NUMBER'
+            }
+        }
+}
+post {
+        always {
+            sh 'docker logout'
         }
     }
 }
